@@ -9,40 +9,63 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@WebServlet(name = "AutorizaServlet", urlPatterns = {"/autorizar"} )
+@WebServlet(name = "AutorizaServlet", urlPatterns = {"/autorizar"}  )
 public class AutorizaServlet extends HttpServlet {
 
-    // Mantemos o DAO de Regras, pois a validação é o foco
     private RegraAutorizacaoDAO regraDAO = new RegraAutorizacaoDAO();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
         // 1. Receber e preparar os parâmetros
-        String codigo = req.getParameter("procedimentoCodigo");
-        String sexo = req.getParameter("sexo").toUpperCase();
+        final String codigo = req.getParameter("procedimentoCodigo");
+        final String sexo = req.getParameter("sexo").toUpperCase();
         String idadeStr = req.getParameter("idade");
-        int idade = 0;
+
+        // Usamos uma variável temporária (tempIdade) para o try-catch
+        int tempIdade = 0;
         try {
-            idade = Integer.parseInt(idadeStr);
+            tempIdade = Integer.parseInt(idadeStr);
         } catch (NumberFormatException e) {
-            enviarResposta(resp, false, "Erro: Idade inválida.");
+            // Se a idade for inválida, retorna e exibe erro
+            req.getSession().setAttribute("autorizacaoStatus", "NEGADO");
+            req.getSession().setAttribute("autorizacaoJustificativa", "Erro: Idade fornecida é inválida.");
+            resp.sendRedirect("cadastro");
             return;
         }
+
+        // Transferimos o valor para uma variável final que pode ser usada nas lambdas
+        final int idade = tempIdade;
 
         boolean autorizado = false;
         String justificativa = "Procedimento não cadastrado ou sem regras definidas.";
 
-        // 2. Buscar regras aplicáveis
-        List<RegraAutorizacao> regrasAplicaveis = regraDAO.buscarRegrasAplicaveis(codigo, idade, sexo);
+        // 2. Buscar regras aplicáveis (O DAO retorna todas as regras por procedimento/sexo)
+        List<RegraAutorizacao> regrasPotenciais = regraDAO.buscarRegrasAplicaveis(codigo, idade, sexo);
+
+        // Filtrar as regras que realmente se aplicam à idade e sexo
+        List<RegraAutorizacao> regrasAplicaveis = regrasPotenciais.stream()
+                // Filtro de Sexo: Se a regra for AMBOS, ou se o sexo for o requerido
+                .filter(regra -> regra.getSexoNecessario().equals("AMBOS") || regra.getSexoNecessario().equals(sexo))
+                // Filtro de Idade Mínima
+                .filter(regra -> idade >= regra.getIdadeMin())
+                // Filtro de Idade Máxima
+                .filter(regra -> regra.getIdadeMax() == null || idade <= regra.getIdadeMax())
+                .collect(Collectors.toList());
 
         // 3. Aplicar a lógica de validação
         if (regrasAplicaveis.isEmpty()) {
             autorizado = false;
-            justificativa = "NEGADO: Procedimento " + codigo + " não possui regras de autorização cadastradas.";
+            // Se a lista potencial não estava vazia, mas a lista aplicável está,
+            // a justificativa deve ser mais detalhada.
+            if (!regrasPotenciais.isEmpty()) {
+                justificativa = "NEGADO: Nenhuma regra de autorização se aplica aos critérios (Idade/Sexo) fornecidos.";
+            } else {
+                justificativa = "NEGADO: Procedimento " + codigo + " não possui regras de autorização cadastradas.";
+            }
         } else {
-            // Prioridade 1: Regras de Negação (resultado = FALSE)
             for (RegraAutorizacao regra : regrasAplicaveis) {
                 if (!regra.getResultado()) {
                     autorizado = false;
@@ -51,9 +74,7 @@ public class AutorizaServlet extends HttpServlet {
                 }
             }
 
-            // Se não foi negado, verifica as regras de Autorização
             if (!autorizado) {
-                // Prioridade 2: Regras de Autorização (resultado = TRUE)
                 for (RegraAutorizacao regra : regrasAplicaveis) {
                     if (regra.getResultado()) {
                         autorizado = true;
@@ -64,18 +85,15 @@ public class AutorizaServlet extends HttpServlet {
             }
         }
 
-        // Se ainda não foi autorizado, mas encontrou regras, significa que nenhuma regra de autorização se aplicou
-        if (!autorizado && !justificativa.startsWith("NEGADO:")) {
-            justificativa = "NEGADO: Não foram encontradas regras de autorização que se apliquem à solicitação.";
+        if (!autorizado && !justificativa.startsWith("NEGADO: Regra de negação")) {
+            if (!regrasPotenciais.isEmpty() && regrasAplicaveis.isEmpty()) {
+                justificativa = "NEGADO: Critérios não atendidos. Idade/Sexo não se qualificam para as regras existentes.";
+            }
         }
 
-        // 4. Enviar a resposta (sem salvar nada)
-        enviarResposta(resp, autorizado, justificativa);
-    }
+        req.getSession().setAttribute("autorizacaoStatus", autorizado ? "AUTORIZADO" : "NEGADO");
+        req.getSession().setAttribute("autorizacaoJustificativa", justificativa);
 
-    private void enviarResposta(HttpServletResponse resp, boolean autorizado, String justificativa) throws IOException {
-        resp.setContentType("text/plain;charset=UTF-8");
-        String status = autorizado ? "AUTORIZADO" : "NEGADO";
-        resp.getWriter().write("Status: " + status + "\nJustificativa: " + justificativa);
+        resp.sendRedirect("cadastro");
     }
 }

@@ -1,30 +1,8 @@
 databaseChangeLog:
-  # CHANGE SET 001: Criação das Tabelas
   - changeSet:
       id: 001
-      author: aluno
+      author: charles
       changes:
-        # Tabela 1: Procedimentos (se você for usar)
-        - createTable:
-            tableName: procedimentos
-            columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: codigo
-                  type: VARCHAR(50)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: descricao
-                  type: VARCHAR(255)
-
-        # Tabela 2: Regras de Autorização (COM O CAMPO 'resultado' ADICIONADO)
         - createTable:
             tableName: regras_autorizacao
             columns:
@@ -47,42 +25,16 @@ databaseChangeLog:
               - column:
                   name: idade_max
                   type: INTEGER
-              - column: # <--- NOVO CAMPO
+              - column:
                   name: resultado
                   type: BOOLEAN
                   constraints:
                     nullable: false
 
-        # Tabela 3: Solicitações (AJUSTADO)
-        - createTable:
-            tableName: solicitacoes
-            columns:
-              # ... (Colunas existentes)
-              - column:
-                  name: procedimento_codigo
-                  type: VARCHAR(50)
-              - column:
-                  name: status
-                  type: VARCHAR(20)
-
-              # <--- NOVAS COLUNAS FALTANDO
-              - column:
-                  name: data_solicitacao
-                  type: TIMESTAMP
-                  constraints:
-                    nullable: false
-              - column:
-                  name: justificativa
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
-
-  # CHANGE SET 002: Inserção das Regras Iniciais
   - changeSet:
       id: 002
-      author: aluno
+      author: charles
       changes:
-        # Regra 1: Nega 1234 para M <= 10 (idade_max: 10, resultado: false)
         - insert:
             tableName: regras_autorizacao
             columns:
@@ -91,7 +43,6 @@ databaseChangeLog:
               - column: {name: idade_min, value: 0}
               - column: {name: idade_max, value: 10}
               - column: {name: resultado, valueBoolean: false}
-        # Regra 2: Autoriza 4567 para M >= 20 (idade_min: 20, resultado: true)
         - insert:
             tableName: regras_autorizacao
             columns:
@@ -99,7 +50,6 @@ databaseChangeLog:
               - column: {name: sexo_necessario, value: "M"}
               - column: {name: idade_min, value: 20}
               - column: {name: resultado, valueBoolean: true}
-        # Regra 3: Nega 6789 para F <= 10 (idade_max: 10, resultado: false)
         - insert:
             tableName: regras_autorizacao
             columns:
@@ -108,7 +58,6 @@ databaseChangeLog:
               - column: {name: idade_min, value: 0}
               - column: {name: idade_max, value: 10}
               - column: {name: resultado, valueBoolean: false}
-        # Regra 4: Autoriza 6789 para M >= 10 (idade_min: 10, resultado: true)
         - insert:
             tableName: regras_autorizacao
             columns:
@@ -116,7 +65,6 @@ databaseChangeLog:
               - column: {name: sexo_necessario, value: "M"}
               - column: {name: idade_min, value: 10}
               - column: {name: resultado, valueBoolean: true}
-        # Regra 5: Autoriza 1234 para M >= 20 (idade_min: 20, resultado: true)
         - insert:
             tableName: regras_autorizacao
             columns:
@@ -124,7 +72,6 @@ databaseChangeLog:
               - column: {name: sexo_necessario, value: "M"}
               - column: {name: idade_min, value: 20}
               - column: {name: resultado, valueBoolean: true}
-        # Regra 6: Autoriza 4567 para F >= 30 (idade_min: 30, resultado: true)
         - insert:
             tableName: regras_autorizacao
             columns:
