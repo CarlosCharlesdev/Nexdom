@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class ConnectionFactory {
 
-    private static final String URL = "jdbc:h2:mem:autorizacoes;DB_CLOSE_DELAY=-1";
+    private static final String URL = "jdbc:h2:file:./db/autorizacoes;DB_CLOSE_DELAY=-1";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 

@@ -53,32 +53,29 @@ databaseChangeLog:
                   constraints:
                     nullable: false
 
-        # Tabela 3: Solicitações
+        # Tabela 3: Solicitações (AJUSTADO)
         - createTable:
             tableName: solicitacoes
             columns:
-              - column:
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: paciente_nome
-                  type: VARCHAR(150)
-              - column:
-                  name: paciente_sexo
-                  type: VARCHAR(10)
-              - column:
-                  name: paciente_idade
-                  type: INTEGER
+              # ... (Colunas existentes)
               - column:
                   name: procedimento_codigo
                   type: VARCHAR(50)
               - column:
                   name: status
                   type: VARCHAR(20)
+
+              # <--- NOVAS COLUNAS FALTANDO
+              - column:
+                  name: data_solicitacao
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: justificativa
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
 
   # CHANGE SET 002: Inserção das Regras Iniciais
   - changeSet:

@@ -46,16 +46,16 @@ public class SolicitacaoDAO {
             while (rs.next()) {
                 Solicitacao sol = new Solicitacao();
                 sol.setId(rs.getLong("id"));
-                sol.setPacienteNome(rs.getString("paciente_nome"));
-                sol.setPacienteSexo(rs.getString("paciente_sexo"));
-                sol.setPacienteIdade(rs.getInt("paciente_idade"));
-                sol.setProcedimentoCodigo(rs.getString("procedimento_codigo"));
+                sol.setPacienteNome(rs.getString("PACIENTE_NOME"));
+                sol.setPacienteSexo(rs.getString("PACIENTE_SEXO"));
+                sol.setPacienteIdade(rs.getInt("PACIENTE_IDADE"));
+                sol.setProcedimentoCodigo(rs.getString("PROCEDIMENTO_CODIGO"));
 
                 // Conversão de Timestamp para LocalDateTime
-                sol.setDataSolicitacao(rs.getTimestamp("data_solicitacao").toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                sol.setDataSolicitacao(rs.getTimestamp("DATA_SOLICITACAO").toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
 
-                sol.setAutorizado("AUTORIZADO".equalsIgnoreCase(rs.getString("status")));
-                sol.setJustificativa(rs.getString("justificativa"));
+                sol.setAutorizado("AUTORIZADO".equalsIgnoreCase(rs.getString("STATUS")));
+                sol.setJustificativa(rs.getString("JUSTIFICATIVA"));
 
                 solicitacoes.add(sol);
             }

@@ -76,14 +76,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>2.2.224</version>
-            <scope>runtime</scope>
-        </dependency>
-
-
     </dependencies>
 
     <build>
@@ -113,8 +105,12 @@
             <plugin>
                 <groupId>org.wildfly.plugins</groupId>
                 <artifactId>wildfly-maven-plugin</artifactId>
-                <version>5.0.0.Final</version> <!-- Verifique a versão mais recente, mas esta deve funcionar -->
+                <version>5.0.0.Final</version>
+                <configuration>
+                    <jbossHome>C:\wildfly\wildfly-38.0.0.Final</jbossHome>
+                </configuration>
             </plugin>
+
 
 
 

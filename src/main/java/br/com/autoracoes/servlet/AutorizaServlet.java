@@ -1,9 +1,7 @@
 package br.com.autoracoes.servlet;
 
 import br.com.autoracoes.dao.RegraAutorizacaoDAO;
-import br.com.autoracoes.dao.SolicitacaoDAO;
 import br.com.autoracoes.model.RegraAutorizacao;
-import br.com.autoracoes.model.Solicitacao;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,13 +13,13 @@ import java.util.List;
 @WebServlet(name = "AutorizaServlet", urlPatterns = {"/autorizar"} )
 public class AutorizaServlet extends HttpServlet {
 
+    // Mantemos o DAO de Regras, pois a validação é o foco
     private RegraAutorizacaoDAO regraDAO = new RegraAutorizacaoDAO();
-    private SolicitacaoDAO solicitacaoDAO = new SolicitacaoDAO();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        String nome = req.getParameter("nome");
+        // 1. Receber e preparar os parâmetros
         String codigo = req.getParameter("procedimentoCodigo");
         String sexo = req.getParameter("sexo").toUpperCase();
         String idadeStr = req.getParameter("idade");
@@ -36,12 +34,15 @@ public class AutorizaServlet extends HttpServlet {
         boolean autorizado = false;
         String justificativa = "Procedimento não cadastrado ou sem regras definidas.";
 
+        // 2. Buscar regras aplicáveis
         List<RegraAutorizacao> regrasAplicaveis = regraDAO.buscarRegrasAplicaveis(codigo, idade, sexo);
 
+        // 3. Aplicar a lógica de validação
         if (regrasAplicaveis.isEmpty()) {
             autorizado = false;
             justificativa = "NEGADO: Procedimento " + codigo + " não possui regras de autorização cadastradas.";
         } else {
+            // Prioridade 1: Regras de Negação (resultado = FALSE)
             for (RegraAutorizacao regra : regrasAplicaveis) {
                 if (!regra.getResultado()) {
                     autorizado = false;
@@ -50,7 +51,9 @@ public class AutorizaServlet extends HttpServlet {
                 }
             }
 
+            // Se não foi negado, verifica as regras de Autorização
             if (!autorizado) {
+                // Prioridade 2: Regras de Autorização (resultado = TRUE)
                 for (RegraAutorizacao regra : regrasAplicaveis) {
                     if (regra.getResultado()) {
                         autorizado = true;
@@ -66,17 +69,7 @@ public class AutorizaServlet extends HttpServlet {
             justificativa = "NEGADO: Não foram encontradas regras de autorização que se apliquem à solicitação.";
         }
 
-        // 4. Salvar a solicitação no banco
-        Solicitacao solicitacao = new Solicitacao();
-        solicitacao.setPacienteNome(nome);
-        solicitacao.setProcedimentoCodigo(codigo);
-        solicitacao.setPacienteIdade(idade);
-        solicitacao.setPacienteSexo(sexo);
-        solicitacao.setAutorizado(autorizado);
-        solicitacao.setJustificativa(justificativa);
-        solicitacaoDAO.salvar(solicitacao);
-
-        // 5. Enviar a resposta
+        // 4. Enviar a resposta (sem salvar nada)
         enviarResposta(resp, autorizado, justificativa);
     }
 
