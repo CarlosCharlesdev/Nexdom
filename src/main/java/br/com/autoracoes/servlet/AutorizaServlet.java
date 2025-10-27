@@ -19,47 +19,35 @@ public class AutorizaServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        // 1. Receber e preparar os parâmetros
         final String codigo = req.getParameter("procedimentoCodigo");
         final String sexo = req.getParameter("sexo").toUpperCase();
         String idadeStr = req.getParameter("idade");
 
-        // Usamos uma variável temporária (tempIdade) para o try-catch
         int tempIdade = 0;
         try {
             tempIdade = Integer.parseInt(idadeStr);
         } catch (NumberFormatException e) {
-            // Se a idade for inválida, retorna e exibe erro
             req.getSession().setAttribute("autorizacaoStatus", "NEGADO");
             req.getSession().setAttribute("autorizacaoJustificativa", "Erro: Idade fornecida é inválida.");
             resp.sendRedirect("cadastro");
             return;
         }
 
-        // Transferimos o valor para uma variável final que pode ser usada nas lambdas
         final int idade = tempIdade;
 
         boolean autorizado = false;
         String justificativa = "Procedimento não cadastrado ou sem regras definidas.";
 
-        // 2. Buscar regras aplicáveis (O DAO retorna todas as regras por procedimento/sexo)
         List<RegraAutorizacao> regrasPotenciais = regraDAO.buscarRegrasAplicaveis(codigo, idade, sexo);
 
-        // Filtrar as regras que realmente se aplicam à idade e sexo
         List<RegraAutorizacao> regrasAplicaveis = regrasPotenciais.stream()
-                // Filtro de Sexo: Se a regra for AMBOS, ou se o sexo for o requerido
                 .filter(regra -> regra.getSexoNecessario().equals("AMBOS") || regra.getSexoNecessario().equals(sexo))
-                // Filtro de Idade Mínima
                 .filter(regra -> idade >= regra.getIdadeMin())
-                // Filtro de Idade Máxima
                 .filter(regra -> regra.getIdadeMax() == null || idade <= regra.getIdadeMax())
                 .collect(Collectors.toList());
 
-        // 3. Aplicar a lógica de validação
         if (regrasAplicaveis.isEmpty()) {
             autorizado = false;
-            // Se a lista potencial não estava vazia, mas a lista aplicável está,
-            // a justificativa deve ser mais detalhada.
             if (!regrasPotenciais.isEmpty()) {
                 justificativa = "NEGADO: Nenhuma regra de autorização se aplica aos critérios (Idade/Sexo) fornecidos.";
             } else {
