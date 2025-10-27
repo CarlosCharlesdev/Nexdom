@@ -9,7 +9,7 @@
 <form action="autorizar" method="post">
 Nome: <input type="text" name="nome"/>
 
-Sexo: <input type="text" name="sexo"/>
+Sexo (M/F): <input type="text" name="sexo"/>
 
 Idade: <input type="number" name="idade"/>
 

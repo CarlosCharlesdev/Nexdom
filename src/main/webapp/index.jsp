@@ -5,7 +5,7 @@
 </head>
 <body>
 <h1>Bem-vindo ao Sistema de Autorizações</h1>
-<%-- O link chama o Servlet mapeado para "/cadastro" --%>
-<a href="cadastro">Cadastrar nova solicitação</a>
+<p><a href="cadastro">Cadastrar nova solicitação</a></p>
+<p><a href="consulta">Consultar autorizações</a></p>
 </body>
 </html>
