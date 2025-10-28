@@ -12,7 +12,8 @@ public class RegraAutorizacaoDAO {
 
     private static final String SELECT_APPLICABLE_SQL =
             "SELECT * FROM regras_autorizacao WHERE procedimento_codigo = ? " +
-                    "AND (sexo_necessario = ? OR sexo_necessario = 'AMBOS')";
+                    "AND (sexo_necessario = ? OR sexo_necessario = 'AMBOS') " +
+                    "AND idade = ?";
 
     public List<RegraAutorizacao> buscarRegrasAplicaveis(String codigo, int idade, String sexo) {
         List<RegraAutorizacao> regras = new ArrayList<>();
@@ -21,6 +22,7 @@ public class RegraAutorizacaoDAO {
 
             stmt.setString(1, codigo);
             stmt.setString(2, sexo);
+            stmt.setInt(3, idade);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -28,13 +30,7 @@ public class RegraAutorizacaoDAO {
                     regra.setId(rs.getLong("ID"));
                     regra.setProcedimentoCodigo(rs.getString("PROCEDIMENTO_CODIGO"));
                     regra.setSexoNecessario(rs.getString("SEXO_NECESSARIO"));
-                    regra.setIdadeMin(rs.getInt("IDADE_MIN"));
-
-                    int idadeMax = rs.getInt("IDADE_MAX");
-                    if (!rs.wasNull()) {
-                        regra.setIdadeMax(idadeMax);
-                    }
-
+                    regra.setIdade(rs.getInt("IDADE"));
                     regra.setResultado(rs.getBoolean("RESULTADO"));
                     regras.add(regra);
                 }

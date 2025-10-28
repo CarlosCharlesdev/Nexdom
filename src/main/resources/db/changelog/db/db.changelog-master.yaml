@@ -20,10 +20,7 @@ databaseChangeLog:
                   name: sexo_necessario
                   type: VARCHAR(10)
               - column:
-                  name: idade_min
-                  type: INTEGER
-              - column:
-                  name: idade_max
+                  name: idade
                   type: INTEGER
               - column:
                   name: resultado
@@ -40,42 +37,40 @@ databaseChangeLog:
             columns:
               - column: {name: procedimento_codigo, value: "1234"}
               - column: {name: sexo_necessario, value: "M"}
-              - column: {name: idade_min, value: 0}
-              - column: {name: idade_max, value: 10}
+              - column: {name: idade, value: 10}
               - column: {name: resultado, valueBoolean: false}
         - insert:
             tableName: regras_autorizacao
             columns:
               - column: {name: procedimento_codigo, value: "4567"}
               - column: {name: sexo_necessario, value: "M"}
-              - column: {name: idade_min, value: 20}
+              - column: {name: idade, value: 20}
               - column: {name: resultado, valueBoolean: true}
         - insert:
             tableName: regras_autorizacao
             columns:
               - column: {name: procedimento_codigo, value: "6789"}
               - column: {name: sexo_necessario, value: "F"}
-              - column: {name: idade_min, value: 0}
-              - column: {name: idade_max, value: 10}
+              - column: {name: idade, value: 10}
               - column: {name: resultado, valueBoolean: false}
         - insert:
             tableName: regras_autorizacao
             columns:
               - column: {name: procedimento_codigo, value: "6789"}
               - column: {name: sexo_necessario, value: "M"}
-              - column: {name: idade_min, value: 10}
+              - column: {name: idade, value: 10}
               - column: {name: resultado, valueBoolean: true}
         - insert:
             tableName: regras_autorizacao
             columns:
               - column: {name: procedimento_codigo, value: "1234"}
               - column: {name: sexo_necessario, value: "M"}
-              - column: {name: idade_min, value: 20}
+              - column: {name: idade, value: 20}
               - column: {name: resultado, valueBoolean: true}
         - insert:
             tableName: regras_autorizacao
             columns:
               - column: {name: procedimento_codigo, value: "4567"}
               - column: {name: sexo_necessario, value: "F"}
-              - column: {name: idade_min, value: 30}
+              - column: {name: idade, value: 30}
               - column: {name: resultado, valueBoolean: true}

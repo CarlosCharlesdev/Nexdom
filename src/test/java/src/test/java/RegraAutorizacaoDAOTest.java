@@ -28,13 +28,11 @@ class RegraAutorizacaoDAOTest {
             System.out.println("✓ Tabela antiga dropada (se existia)");
         }
 
-        // Cria tabela de teste
         String createTable = "CREATE TABLE regras_autorizacao (" +
                 "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
                 "procedimento_codigo VARCHAR(50), " +
                 "sexo_necessario VARCHAR(10), " +
-                "idade_min INTEGER, " +
-                "idade_max INTEGER, " +
+                "idade INTEGER, " +
                 "resultado BOOLEAN NOT NULL)";
 
         try (PreparedStatement stmt = connection.prepareStatement(createTable)) {
@@ -48,7 +46,6 @@ class RegraAutorizacaoDAOTest {
     @BeforeEach
     void setUp() throws SQLException {
         dao = new RegraAutorizacaoDAO();
-
         limparDados();
         inserirDadosTeste();
     }
@@ -61,7 +58,6 @@ class RegraAutorizacaoDAOTest {
     @AfterAll
     static void closeDatabase() throws SQLException {
         if (connection != null && !connection.isClosed()) {
-            // Drop table antes de fechar
             String dropTable = "DROP TABLE IF EXISTS regras_autorizacao";
             try (PreparedStatement stmt = connection.prepareStatement(dropTable)) {
                 stmt.execute();
@@ -81,55 +77,50 @@ class RegraAutorizacaoDAOTest {
 
     private void inserirDadosTeste() throws SQLException {
         String insert = "INSERT INTO regras_autorizacao " +
-                "(procedimento_codigo, sexo_necessario, idade_min, idade_max, resultado) " +
-                "VALUES (?, ?, ?, ?, ?)";
+                "(procedimento_codigo, sexo_necessario, idade, resultado) " +
+                "VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(insert)) {
+            // Regra 1: 1234, M, 10 anos, NÃO
             stmt.setString(1, "1234");
             stmt.setString(2, "M");
-            stmt.setInt(3, 0);
-            stmt.setInt(4, 10);
-            stmt.setBoolean(5, false);
+            stmt.setInt(3, 10);
+            stmt.setBoolean(4, false);
             stmt.addBatch();
 
-            // Regra 2: Procedimento 4567, Masculino, 20+ anos, Autorizado
+            // Regra 2: 4567, M, 20 anos, SIM
             stmt.setString(1, "4567");
             stmt.setString(2, "M");
             stmt.setInt(3, 20);
-            stmt.setObject(4, null);
-            stmt.setBoolean(5, true);
+            stmt.setBoolean(4, true);
             stmt.addBatch();
 
-            // Regra 3: Procedimento 6789, Feminino, 0-10 anos, Negado
+            // Regra 3: 6789, F, 10 anos, NÃO
             stmt.setString(1, "6789");
             stmt.setString(2, "F");
-            stmt.setInt(3, 0);
-            stmt.setInt(4, 10);
-            stmt.setBoolean(5, false);
+            stmt.setInt(3, 10);
+            stmt.setBoolean(4, false);
             stmt.addBatch();
 
-            // Regra 4: Procedimento 6789, Masculino, 10+ anos, Autorizado
+            // Regra 4: 6789, M, 10 anos, SIM
             stmt.setString(1, "6789");
             stmt.setString(2, "M");
             stmt.setInt(3, 10);
-            stmt.setObject(4, null);
-            stmt.setBoolean(5, true);
+            stmt.setBoolean(4, true);
             stmt.addBatch();
 
-            // Regra 5: Procedimento 1234, Masculino, 20+ anos, Autorizado
+            // Regra 5: 1234, M, 20 anos, SIM
             stmt.setString(1, "1234");
             stmt.setString(2, "M");
             stmt.setInt(3, 20);
-            stmt.setObject(4, null);
-            stmt.setBoolean(5, true);
+            stmt.setBoolean(4, true);
             stmt.addBatch();
 
-            // Regra 6: Procedimento 4567, Feminino, 30+ anos, Autorizado
+            // Regra 6: 4567, F, 30 anos, SIM
             stmt.setString(1, "4567");
             stmt.setString(2, "F");
             stmt.setInt(3, 30);
-            stmt.setObject(4, null);
-            stmt.setBoolean(5, true);
+            stmt.setBoolean(4, true);
             stmt.addBatch();
 
             stmt.executeBatch();
@@ -137,125 +128,125 @@ class RegraAutorizacaoDAOTest {
     }
 
     @Test
-    @DisplayName("Deve buscar regras aplicáveis para procedimento 1234, homem de 5 anos")
-    void testBuscarRegrasAplicaveis_Procedimento1234_Homem5Anos() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 5, "M");
+    @DisplayName("1234 | M | 15 anos → SEM REGRA (lista vazia)")
+    void test_1234_M_15anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 15, "M");
 
-        assertNotNull(regras);
-        assertEquals(2, regras.size(), "Deve retornar 2 regras para procedimento 1234 e sexo M");
-
-        assertTrue(regras.stream().allMatch(r -> "1234".equals(r.getProcedimentoCodigo())));
-        assertTrue(regras.stream().allMatch(r -> "M".equals(r.getSexoNecessario())));
+        assertTrue(regras.isEmpty(), "⚠️ 1234-M-15anos NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve buscar regras aplicáveis para procedimento 4567, mulher de 35 anos")
-    void testBuscarRegrasAplicaveis_Procedimento4567_Mulher35Anos() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 35, "F");
+    @DisplayName("1234 | M | 20 anos → DEVE AUTORIZAR (regra 20+ anos)")
+    void test_1234_M_20anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 20, "M");
 
-        assertNotNull(regras);
-        assertEquals(1, regras.size(), "Deve retornar 1 regra para procedimento 4567 e sexo F");
-
-        RegraAutorizacao regra = regras.get(0);
-        assertEquals("4567", regra.getProcedimentoCodigo());
-        assertEquals("F", regra.getSexoNecessario());
-        assertEquals(30, regra.getIdadeMin());
-        assertTrue(regra.getResultado());
-    }
-
-    @Test
-    @DisplayName("Deve buscar regras aplicáveis para procedimento 6789, homem de 15 anos")
-    void testBuscarRegrasAplicaveis_Procedimento6789_Homem15Anos() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 15, "M");
-
-        assertNotNull(regras);
         assertEquals(1, regras.size());
-
-        RegraAutorizacao regra = regras.get(0);
-        assertEquals("6789", regra.getProcedimentoCodigo());
-        assertEquals("M", regra.getSexoNecessario());
-        assertEquals(10, regra.getIdadeMin());
-        assertTrue(regra.getResultado());
+        assertTrue(regras.get(0).getResultado(), "✅ 1234-M-20anos = AUTORIZADO");
     }
 
     @Test
-    @DisplayName("Deve retornar lista vazia para procedimento inexistente")
-    void testBuscarRegrasAplicaveis_ProcedimentoInexistente() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("9999", 25, "M");
+    @DisplayName("1234 | F | qualquer idade → SEM REGRA (lista vazia)")
+    void test_1234_F_qualquerIdade() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 20, "F");
 
-        assertNotNull(regras);
-        assertTrue(regras.isEmpty(), "Deve retornar lista vazia para procedimento inexistente");
+        assertTrue(regras.isEmpty(), "⚠️ 1234-F NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve retornar lista vazia para sexo incompatível")
-    void testBuscarRegrasAplicaveis_SexoIncompativel() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 5, "M");
+    @DisplayName("4567 | M | 19 anos → SEM REGRA (lista vazia)")
+    void test_4567_M_19anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 19, "M");
 
-        assertNotNull(regras);
-        assertEquals(1, regras.size(), "Deve retornar apenas regras compatíveis com o sexo");
+        assertTrue(regras.isEmpty(), "⚠️ 4567-M-19anos NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve tratar corretamente idade_max NULL")
-    void testBuscarRegrasAplicaveis_IdadeMaxNull() {
+    @DisplayName("4567 | M | 20 anos → DEVE AUTORIZAR")
+    void test_4567_M_20anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 20, "M");
+
+        assertEquals(1, regras.size());
+        assertTrue(regras.get(0).getResultado(), "✅ 4567-M-20anos = AUTORIZADO");
+    }
+
+    @Test
+    @DisplayName("4567 | M | 21 anos → SEM REGRA (lista vazia)")
+    void test_4567_M_21anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 21, "M");
+
+        assertTrue(regras.isEmpty(), "⚠️ 4567-M-21anos NÃO ESTÁ NA TABELA = VAZIO");
+    }
+
+    @Test
+    @DisplayName("4567 | M | 25 anos → SEM REGRA (lista vazia)")
+    void test_4567_M_25anos() {
         List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 25, "M");
 
-        assertNotNull(regras);
-        assertFalse(regras.isEmpty());
-
-        RegraAutorizacao regra = regras.get(0);
-        assertEquals(20, regra.getIdadeMin());
-        assertNull(regra.getIdadeMax(), "Idade máxima deve ser null quando não definida");
+        assertTrue(regras.isEmpty(), "⚠️ 4567-M-25anos NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve popular todos os campos da RegraAutorizacao corretamente")
-    void testBuscarRegrasAplicaveis_CamposPreenchidos() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 5, "M");
+    @DisplayName("4567 | F | 29 anos → SEM REGRA (lista vazia)")
+    void test_4567_F_29anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 29, "F");
 
-        assertFalse(regras.isEmpty());
-
-        RegraAutorizacao regra = regras.get(0);
-        assertNotNull(regra.getId());
-        assertNotNull(regra.getProcedimentoCodigo());
-        assertNotNull(regra.getSexoNecessario());
-        assertTrue(regra.getIdadeMin() >= 0);
+        assertTrue(regras.isEmpty(), "⚠️ 4567-F-29anos NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve retornar múltiplas regras quando existem várias aplicáveis")
-    void testBuscarRegrasAplicaveis_MultiplasRegras() {
-        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 25, "M");
+    @DisplayName("4567 | F | 30 anos → DEVE AUTORIZAR")
+    void test_4567_F_30anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("4567", 30, "F");
 
-        assertNotNull(regras);
-        assertEquals(2, regras.size(), "Deve retornar todas as regras aplicáveis");
-
-        assertTrue(regras.stream().allMatch(r ->
-                "1234".equals(r.getProcedimentoCodigo()) && "M".equals(r.getSexoNecessario())
-        ));
+        assertEquals(1, regras.size());
+        assertTrue(regras.get(0).getResultado(), "✅ 4567-F-30anos = AUTORIZADO");
     }
 
     @Test
-    @DisplayName("Deve respeitar filtro de sexo na query SQL")
-    void testBuscarRegrasAplicaveis_FiltroSexo() {
-        List<RegraAutorizacao> regrasMasculino = dao.buscarRegrasAplicaveis("6789", 5, "M");
-        List<RegraAutorizacao> regrasFeminino = dao.buscarRegrasAplicaveis("6789", 5, "F");
+    @DisplayName("6789 | M | 5 anos → SEM REGRA (lista vazia)")
+    void test_6789_M_5anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 5, "M");
 
-        assertNotNull(regrasMasculino);
-        assertNotNull(regrasFeminino);
-        assertEquals(1, regrasMasculino.size());
-        assertEquals(1, regrasFeminino.size());
-
-        assertEquals("M", regrasMasculino.get(0).getSexoNecessario());
-        assertEquals("F", regrasFeminino.get(0).getSexoNecessario());
-
-        assertNotEquals(regrasMasculino.get(0).getId(), regrasFeminino.get(0).getId());
+        assertTrue(regras.isEmpty(), "⚠️ 6789-M-5anos NÃO ESTÁ NA TABELA = VAZIO");
     }
 
     @Test
-    @DisplayName("Deve lidar com código de procedimento null sem lançar exceção")
-    void testBuscarRegrasAplicaveis_CodigoNull() {
+    @DisplayName("6789 | M | 10 anos → DEVE AUTORIZAR")
+    void test_6789_M_10anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 10, "M");
+
+        assertEquals(1, regras.size());
+        assertTrue(regras.get(0).getResultado(), "✅ 6789-M-10anos = AUTORIZADO");
+    }
+
+    @Test
+    @DisplayName("6789 | F | 10 anos → DEVE NEGAR (regra 0-10 anos)")
+    void test_6789_F_10anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 10, "F");
+
+        assertEquals(1, regras.size());
+        assertFalse(regras.get(0).getResultado(), "❌ 6789-F-10anos = NEGADO");
+    }
+
+    @Test
+    @DisplayName("6789 | F | 11 anos → SEM REGRA (lista vazia)")
+    void test_6789_F_11anos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("6789", 11, "F");
+
+        assertTrue(regras.isEmpty(), "⚠️ 6789-F-11anos NÃO ESTÁ NA TABELA = VAZIO");
+    }
+
+    @Test
+    @DisplayName("Procedimento inexistente → lista vazia")
+    void test_procedimentoInexistente() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("9999", 25, "M");
+
+        assertTrue(regras.isEmpty(), "Procedimento 9999 não existe");
+    }
+
+    @Test
+    @DisplayName("Código null → lista vazia")
+    void test_codigoNull() {
         List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis(null, 25, "M");
 
         assertNotNull(regras);
@@ -263,10 +254,24 @@ class RegraAutorizacaoDAOTest {
     }
 
     @Test
-    @DisplayName("Deve lidar com sexo null sem lançar exceção")
-    void testBuscarRegrasAplicaveis_SexoNull() {
+    @DisplayName("Sexo null → não deve lançar exceção")
+    void test_sexoNull() {
         List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 25, null);
 
         assertNotNull(regras);
+    }
+
+    @Test
+    @DisplayName("Campos devem estar populados corretamente")
+    void test_camposPreenchidos() {
+        List<RegraAutorizacao> regras = dao.buscarRegrasAplicaveis("1234", 10, "M");
+
+        assertFalse(regras.isEmpty());
+
+        RegraAutorizacao regra = regras.get(0);
+        assertNotNull(regra.getId());
+        assertNotNull(regra.getProcedimentoCodigo());
+        assertNotNull(regra.getSexoNecessario());
+        assertNotNull(regra.getIdade());
     }
 }

@@ -4,8 +4,7 @@ public class RegraAutorizacao {
     private Long id;
     private String procedimentoCodigo;
     private String sexoNecessario;
-    private Integer idadeMin;
-    private Integer idadeMax;
+    private Integer idade;
     private Boolean resultado;
 
 
@@ -15,10 +14,12 @@ public class RegraAutorizacao {
     public void setProcedimentoCodigo(String procedimentoCodigo) { this.procedimentoCodigo = procedimentoCodigo; }
     public String getSexoNecessario() { return sexoNecessario; }
     public void setSexoNecessario(String sexoNecessario) { this.sexoNecessario = sexoNecessario; }
-    public Integer getIdadeMin() { return idadeMin; }
-    public void setIdadeMin(Integer idadeMin) { this.idadeMin = idadeMin; }
-    public Integer getIdadeMax() { return idadeMax; }
-    public void setIdadeMax(Integer idadeMax) { this.idadeMax = idadeMax; }
     public Boolean getResultado() { return resultado; }
     public void setResultado(Boolean resultado) { this.resultado = resultado; }
+    public Integer getIdade() {
+        return idade;
+    }
+    public void setIdade(Integer idade) {
+        this.idade = idade;
+    }
 }

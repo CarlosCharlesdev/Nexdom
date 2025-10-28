@@ -23,9 +23,9 @@ public class AutorizaServlet extends HttpServlet {
         final String sexo = req.getParameter("sexo").toUpperCase();
         String idadeStr = req.getParameter("idade");
 
-        int tempIdade = 0;
+        int idade = 0;
         try {
-            tempIdade = Integer.parseInt(idadeStr);
+            idade = Integer.parseInt(idadeStr);
         } catch (NumberFormatException e) {
             req.getSession().setAttribute("autorizacaoStatus", "NEGADO");
             req.getSession().setAttribute("autorizacaoJustificativa", "Erro: Idade fornecida é inválida.");
@@ -33,17 +33,15 @@ public class AutorizaServlet extends HttpServlet {
             return;
         }
 
-        final int idade = tempIdade;
-
         boolean autorizado = false;
         String justificativa = "Procedimento não cadastrado ou sem regras definidas.";
 
         List<RegraAutorizacao> regrasPotenciais = regraDAO.buscarRegrasAplicaveis(codigo, idade, sexo);
 
+        int finalIdade = idade;
         List<RegraAutorizacao> regrasAplicaveis = regrasPotenciais.stream()
                 .filter(regra -> regra.getSexoNecessario().equals("AMBOS") || regra.getSexoNecessario().equals(sexo))
-                .filter(regra -> idade >= regra.getIdadeMin())
-                .filter(regra -> regra.getIdadeMax() == null || idade <= regra.getIdadeMax())
+                .filter(regra -> regra.getIdade() == finalIdade)
                 .collect(Collectors.toList());
 
         if (regrasAplicaveis.isEmpty()) {
