@@ -57,7 +57,7 @@ public class AutorizaServlet extends HttpServlet {
             for (RegraAutorizacao regra : regrasAplicaveis) {
                 if (!regra.getResultado()) {
                     autorizado = false;
-                    justificativa = "NEGADO: Regra de negação por idade/sexo aplicada (ID:" + regra.getId() + ").";
+                    justificativa = "NEGADO: Regra de negação por idade/sexo aplicada (Regra:" + regra.getId() + ").";
                     break;
                 }
             }
@@ -66,7 +66,7 @@ public class AutorizaServlet extends HttpServlet {
                 for (RegraAutorizacao regra : regrasAplicaveis) {
                     if (regra.getResultado()) {
                         autorizado = true;
-                        justificativa = "AUTORIZADO: Regra de autorização por idade/sexo aplicada (ID:" + regra.getId() + ").";
+                        justificativa = "AUTORIZADO: Regra de autorização por idade/sexo aplicada (Regra:" + regra.getId() + ").";
                         break;
                     }
                 }

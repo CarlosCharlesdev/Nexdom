@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>Sistema de Autorizações</title>
+<link rel="icon" type="image/png" href="nexDom.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>

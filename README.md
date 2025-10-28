@@ -93,6 +93,26 @@ Após a inicialização do Wildfly, acesse a aplicação:
 *   **Página Inicial:** `http://localhost:8080/NexDOM/`
 *   **Formulário de Cadastro:** `http://localhost:8080/NexDOM/cadastro`
 
+# Regras de Negócio Iniciais (Liquibase)
+
+Abaixo estão as **6 regras de autorização/negação** inseridas na tabela `regras_autorizacao` através do script de inicialização do **Liquibase**.  
+Essas regras definem o comportamento da aplicação no momento da validação:
+
+| ID | Procedimento | Sexo       | Idade Mínima | Idade Máxima | Resultado           | Descrição da Regra                                                                 |
+|----|---------------|------------|---------------|---------------|---------------------|------------------------------------------------------------------------------------|
+| 1  | 1234          | Masculino  | 0             | 10            | ❌ NEGADO (FALSE)   | Nega o procedimento **1234** para pacientes masculinos de **0 a 10 anos**.        |
+| 2  | 4567          | Masculino  | 20            | NULL          | ✅ AUTORIZADO (TRUE) | Autoriza o procedimento **4567** para pacientes masculinos com **20 anos ou mais**.|
+| 3  | 6789          | Feminino   | 0             | 10            | ❌ NEGADO (FALSE)   | Nega o procedimento **6789** para pacientes femininos de **0 a 10 anos**.         |
+| 4  | 6789          | Masculino  | 10            | NULL          | ✅ AUTORIZADO (TRUE) | Autoriza o procedimento **6789** para pacientes masculinos com **10 anos ou mais**.|
+| 5  | 1234          | Masculino  | 20            | NULL          | ✅ AUTORIZADO (TRUE) | Autoriza o procedimento **1234** para pacientes masculinos com **20 anos ou mais**.|
+| 6  | 4567          | Feminino   | 30            | NULL          | ✅ AUTORIZADO (TRUE) | Autoriza o procedimento **4567** para pacientes femininos com **30 anos ou mais**. |
+
+---
+
+📘 **Observação:**  
+Essas regras são carregadas automaticamente na inicialização do banco via **Liquibase**, garantindo que a aplicação possua uma base mínima de critérios de autorização desde o primeiro deploy.
+
+
 ## Lógica de Validação
 
 A validação ocorre no `AutorizaServlet` e segue a seguinte prioridade:

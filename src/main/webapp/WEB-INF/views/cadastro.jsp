@@ -3,6 +3,7 @@
 <html>
 <head>
 <title>Cadastro de Solicitação</title>
+<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/nexDom.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
